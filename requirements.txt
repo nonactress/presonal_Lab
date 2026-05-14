@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+gradio
+pydantic
+httpx
+python-dotenv
