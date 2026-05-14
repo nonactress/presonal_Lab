@@ -1,0 +1,72 @@
+Abstract
+Lack of user acceptance has long been a major roadblock to the success of information systems
+efforts. A new theoretical model is introduced to address (1) why end-users accept or reject
+information systems and (2) how user acceptance is affected by the design features of the system. The
+proposed model, termed the "technology acceptance model" (TAM), specifies the causal
+interrelationships between system design features, perceived usefulness, perceived ease of use,
+attitude toward using and actual usage behavior. TAM was derived by integrating previous research
+from three distinct traditions: Management Information Systems (MIS) attitude research, MIS
+laboratory research and Human-computer Interaction (HCI) research. Pertinent issues from the
+psychology of attitudes were taken into account in order to place TAM on a solid theoretical
+foundation. Valid, reliable measures were used to operationalize the model's variables. A field
+experiment of 112 users and 2 end-user systems was conducted to test the hypothesized causal
+structure of TAM. The proposed model accounted for 36% of the variance in usage behavior.
+Perceived usefulness was 50% more influential than ease of use in determining usage. Implications
+for future research and practice are discussed.
+
+1. INTRODUCTION
+Corporations are investing in management information technology hand over fist. At the same
+time, many companies are beginning to question whether the technology really contributes to
+organizational performance. Industry observers specifically mention the problem of underutilization,
+pointing out that a significant fraction of installed office systems, personal computers and terminals
+gather dust. In general, the goal of an organizationally-based information system is to improve
+performance on the job. Unfortunately, performance impacts are lost whenever people decide not to
+use the system. User acceptance is often the pivotal factor determining the success or failure of an
+information system project.
+The present research introduces and empirically tests a new behavioral model of user acceptance,
+referred to as the "technology acceptance model" (TAM). TAM is designed to address two key
+research questions:
+(1) Why do users accept or reject information technology?
+(2) What is the impact of a system's design features on user acceptance?
+
+2. RATIONALE FOR TECHNOLOGY ACCEPTANCE MODEL (TAM)
+TAM was derived by integrating, within a single model, key variables and relationships that
+have been studied within three distinct paradigms: (1) MIS attitude research, (2) MIS laboratory
+research and (3) Human-computer Interaction (HCI) laboratory research. These three paradigms
+offer complementary perspectives which, when brought together, provide a more complete picture of
+the interplay between objective system features, user beliefs and attitudes, and usage behavior.
+
+The Impact of Perceived Usefulness on Attitudes and Usage
+The present research defines perceived usefulness as "the degree to which an individual believes
+that using a particular system would enhance his or her job performance." The importance of
+expected performance impacts for user acceptance was suggested in a series of studies. Nine previous
+empirical studies have found constructs conceptually similar to perceived usefulness significantly
+linked to either attitudes or usage.
+
+The Impact of Perceived Ease of Use on Attitudes and Usage
+Perceived ease of use is defined as "the degree to which an individual believes that using a
+particular system would be free of physical and mental effort." Previous research is consistent with
+the hypothesis that perceived usefulness and perceived ease of use are distinct constructs and that
+ease of use is significantly linked to attitudes and usage.
+
+The Impact of Perceived Ease of Use on Perceived Usefulness
+Perceived ease of use is hypothesized to have a significant direct effect on perceived usefulness.
+If two systems perform the identical set of functions, a user should find the one that is easier to use
+more useful. If a system is easier to use, less of the user's cognitive capacity should be required to
+operate the system, allowing the user to be more attentive to the task.
+
+4. DISCUSSION
+The TAM motivational variables: attitude toward using, perceived usefulness and perceived ease
+of use, taken together, fully mediate between system design features and usage. That is, the
+characteristics of the system appear to influence behavior entirely through these motivational
+variables and have no additional direct effect on use.
+The powerful effect of usefulness on actual use, both directly and indirectly through attitude, is
+perhaps the most striking finding. Perceived usefulness exerts more than twice as much direct
+influence on use than does attitude toward using. In addition, usefulness exerts more than four times
+as much direct influence on attitude as does ease of use.
+Compared to usefulness, perceived ease of use has a fairly small direct effect on attitude,
+primarily influencing attitude indirectly via its relatively strong effect on usefulness. The effect of
+ease of use on usage operates almost entirely through its effect on usefulness.
+TAM represents an evolutionary step in the development of a valid theory of user acceptance,
+and provides a foundation for further research that builds upon and extends TAM as necessary to
+account for a broader range of phenomena.
