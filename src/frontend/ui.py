@@ -1,8 +1,75 @@
 import gradio as gr
 import httpx
 import asyncio
+from html import escape
 
 BACKEND_URL = "http://localhost:8000/analyze"
+
+
+def _build_annotated_code_html(source_code: str, top3: list) -> str:
+    if not source_code:
+        return ""
+    lines = source_code.split("\n")
+    issue_map = {item.get("line_number"): item for item in top3 if item.get("line_number")}
+
+    rows = []
+    for i, line in enumerate(lines, 1):
+        escaped = escape(line).replace(" ", "&nbsp;")
+        if i in issue_map:
+            issue = issue_map[i]
+            sev = issue.get("severity", 0)
+            icon = "🔴" if sev > 0.7 else "🟡" if sev > 0.4 else "🔵"
+            bg = "#3d1515" if sev > 0.7 else "#3d2b0a" if sev > 0.4 else "#1a2d3d"
+            reason = escape(issue.get("reason", ""))
+            rows.append(
+                f'<tr style="background:{bg}">'
+                f'<td style="color:#666;padding:2px 8px;text-align:right;user-select:none;min-width:32px;vertical-align:top">{i}</td>'
+                f'<td style="padding:2px 12px;font-family:monospace;white-space:pre;color:#e2e8f0;vertical-align:top">{escaped}</td>'
+                f'<td style="padding:2px 8px;color:#f87171;font-size:0.8em;white-space:nowrap;vertical-align:top">{icon}&nbsp;{reason}</td>'
+                f"</tr>"
+            )
+        else:
+            rows.append(
+                f"<tr>"
+                f'<td style="color:#555;padding:2px 8px;text-align:right;user-select:none;min-width:32px">{i}</td>'
+                f'<td style="padding:2px 12px;font-family:monospace;white-space:pre;color:#94a3b8">{escaped}</td>'
+                f"<td></td>"
+                f"</tr>"
+            )
+
+    table = "".join(rows)
+    return (
+        '<div style="background:#1e1e1e;border-radius:8px;padding:12px;overflow:auto;max-height:360px;margin:12px 0">'
+        '<p style="color:#64748b;font-size:0.8em;margin:0 0 8px;font-family:monospace">📄 소스 코드 — 이슈 라인 하이라이트</p>'
+        f'<table style="border-collapse:collapse;width:100%">{table}</table>'
+        "</div>"
+    )
+
+
+def _build_issue_cards_html(top3: list) -> str:
+    if not top3:
+        return '<p style="color:#6b7280">감지된 이슈 없음</p>'
+    cards = []
+    for item in top3:
+        sev = item.get("severity", 0)
+        sev_pct = int(sev * 100)
+        icon = "🔴" if sev > 0.7 else "🟡" if sev > 0.4 else "🔵"
+        line = item.get("line_number", "?")
+        reason = escape(item.get("reason", ""))
+        evidence = escape(item.get("evidence", ""))
+        cards.append(
+            '<details style="margin:6px 0;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden">'
+            '<summary style="padding:10px 14px;cursor:pointer;background:#f9fafb;font-weight:500;list-style:none">'
+            f'{icon} <b>[line {line}]</b> {reason}'
+            f'<span style="color:#9ca3af;font-size:0.8em;float:right">심각도 {sev_pct}%</span>'
+            "</summary>"
+            '<div style="padding:10px 14px;background:#fff;color:#6b7280;font-size:0.88em;border-top:1px solid #f3f4f6">'
+            f"📚 <b>근거:</b> {evidence}"
+            "</div>"
+            "</details>"
+        )
+    return "".join(cards)
+
 
 async def call_analysis(files, persona_desc):
     if not files:
@@ -14,50 +81,58 @@ async def call_analysis(files, persona_desc):
         }
         return
 
-    # 화면 2: 진행 중 표시
     yield {
         input_screen: gr.update(visible=False),
         progress_screen: gr.update(visible=True),
-        status_text: "🧬 사용자님이 요청하신 페르소나를 형성하고 있습니다..."
+        status_text: "🧬 20대 대학생 코호트 페르소나 구성 중..."
     }
-    await asyncio.sleep(2)
-    
+    await asyncio.sleep(1)
+
     yield {
-        status_text: "🔍 형성된 페르소나가 실제로 QA를 진행하고 있습니다..."
+        status_text: "🔍 코드 분석 및 UX 시뮬레이션 진행 중..."
     }
 
-    # 백엔드 호출
     try:
         async with httpx.AsyncClient() as client:
-            # Multipart form-data 생성
             data = {"persona_desc": persona_desc}
             upload_files = []
             for f in files:
-                # f.name은 파일 경로, f는 파일 객체
                 with open(f.name, "rb") as rb:
-                    upload_files.append(("files", (f.orig_name if hasattr(f, 'orig_name') else f.name, rb.read())))
+                    upload_files.append(("files", (f.orig_name if hasattr(f, "orig_name") else f.name, rb.read())))
 
-            response = await client.post(BACKEND_URL, data=data, files=upload_files, timeout=60.0)
-            
+            response = await client.post(BACKEND_URL, data=data, files=upload_files, timeout=120.0)
+
             if response.status_code == 200:
                 res = response.json()
 
-                score_val = f"혼란 지수: {res['confusion_score']} / 100"
-                cohort_framing = res.get("cohort_framing", "")
+                score = res["confusion_score"]
+                score_color = "#ef4444" if score >= 70 else "#f59e0b" if score >= 40 else "#10b981"
+                score_val = f"혼란 지수: {score} / 100"
+
                 abandoned_str = "⚠️ 이탈 예측됨" if res.get("abandoned") else "✅ 완료 가능"
+                cohort_framing = res.get("cohort_framing", "")
 
-                think_aloud_html = f"<blockquote style='border-left:4px solid #f59e0b; padding-left:12px; color:#374151;'>{res.get('think_aloud', '')}</blockquote>"
+                think_aloud_html = (
+                    '<blockquote style="border-left:4px solid #f59e0b;padding:12px 16px;'
+                    'background:#fffbeb;border-radius:0 8px 8px 0;margin:0 0 4px;color:#92400e;font-style:italic">'
+                    f'💬 {escape(res.get("think_aloud", ""))}'
+                    "</blockquote>"
+                )
 
-                top3_html = "<ul>"
-                for item in res.get("top3", []):
-                    severity_pct = int(item.get("severity", 0) * 100)
-                    top3_html += (
-                        f"<li><b>[line {item.get('line_number', '?')}]</b> "
-                        f"{item.get('reason', '')} "
-                        f"<span style='color:#6b7280; font-size:0.85em;'>({item.get('evidence', '')})</span>"
-                        f" — 심각도 {severity_pct}%</li>"
-                    )
-                top3_html += "</ul>"
+                code_view_html = _build_annotated_code_html(
+                    res.get("source_code", ""),
+                    res.get("top3", [])
+                )
+
+                issue_cards_html = _build_issue_cards_html(res.get("top3", []))
+
+                timeline_html = (
+                    think_aloud_html
+                    + '<p style="font-weight:600;margin:16px 0 6px;color:#374151">🔍 코드 이슈 위치</p>'
+                    + code_view_html
+                    + '<p style="font-weight:600;margin:16px 0 6px;color:#374151">📋 이슈 상세 (클릭해서 근거 보기)</p>'
+                    + issue_cards_html
+                )
 
                 fix_prompts_val = "\n\n".join(res.get("fix_prompts", []))
 
@@ -66,7 +141,7 @@ async def call_analysis(files, persona_desc):
                     result_screen: gr.update(visible=True),
                     score_display: score_val,
                     drop_off_display: f"### {abandoned_str}\n{cohort_framing}",
-                    timeline_display: think_aloud_html + top3_html,
+                    timeline_display: timeline_html,
                     fix_prompts: fix_prompts_val
                 }
             else:
@@ -82,6 +157,7 @@ async def call_analysis(files, persona_desc):
             error_msg: f"Connection Error: {str(e)}"
         }
 
+
 def go_back():
     return {
         input_screen: gr.update(visible=True),
@@ -89,49 +165,46 @@ def go_back():
         error_msg: ""
     }
 
+
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
     gr.Markdown("# 🧪 PersonaLab: UX Linter for Vibe Coders")
-    
-    # 화면 1: 입력
+
     with gr.Column(visible=True) as input_screen:
         gr.Markdown("### 📂 Step 1: 프론트엔드 코드 업로드 및 페르소나 설정")
         file_input = gr.File(label="프로젝트 소스코드 (ZIP 또는 다중 파일)", file_count="multiple")
         persona_input = gr.Textbox(
-            label="페르소나 설명", 
-            placeholder="예: 스마트폰 사용이 서툰 70대 할머니, 성격이 급한 20대 직장인 등",
-            lines=3
+            label="페르소나 설명",
+            placeholder="예: 20대 대학생",
+            lines=2
         )
         error_msg = gr.Markdown("", label="Error")
         analyze_btn = gr.Button("UX 분석 시작", variant="primary")
 
-    # 화면 2: 진행 중
     with gr.Column(visible=False) as progress_screen:
         gr.Markdown("### ⚙️ Step 2: 분석 진행 중")
         status_text = gr.Markdown("페르소나 형성 중...")
-        gr.HTML("<div style='text-align:center'><img src='https://i.gifer.com/ZZ5H.gif' width='100'></div>") # 간단한 로딩 바이브
+        gr.HTML("<div style='text-align:center'><img src='https://i.gifer.com/ZZ5H.gif' width='80'></div>")
 
-    # 화면 3: 결과
     with gr.Column(visible=False) as result_screen:
         gr.Markdown("### 📊 Step 3: UX 분석 결과")
         with gr.Row():
             score_display = gr.Label(label="전체 혼란 지수")
             drop_off_display = gr.Markdown("")
-            
-        timeline_display = gr.HTML(label="사용자 시뮬레이션 로그 (Think-Aloud)")
-        
+
+        timeline_display = gr.HTML()
+
         with gr.Accordion("🛠️ Vibe Coding Fix Prompts", open=True):
             fix_prompts = gr.TextArea(label="복사하여 Cursor/v0에 붙여넣으세요", lines=10, interactive=False)
             copy_btn = gr.Button("프롬프트 복사")
-            
+
         back_btn = gr.Button("새로운 분석 시작")
 
-    # 이벤트 연결
     analyze_btn.click(
-        call_analysis, 
-        inputs=[file_input, persona_input], 
+        call_analysis,
+        inputs=[file_input, persona_input],
         outputs=[input_screen, progress_screen, result_screen, status_text, score_display, drop_off_display, timeline_display, fix_prompts, error_msg]
     )
-    
+
     back_btn.click(
         go_back,
         outputs=[input_screen, result_screen, error_msg]

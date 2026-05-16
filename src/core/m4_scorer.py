@@ -40,4 +40,5 @@ def build_scorer_output(simulation_result: dict, source_code: str, cohort: str =
         "fix_prompts": generate_fix_prompts(simulation_result, source_code, cohort),
         "think_aloud": simulation_result.get("think_aloud", ""),
         "abandoned": simulation_result.get("abandoned", False),
+        "source_code": source_code,
     }
