@@ -5,6 +5,9 @@
 M3의 시뮬레이션 결과를 분석하여 혼란 지수를 계산하고,
 **개발자가 코드 파일의 특정 라인을 즉시 고칠 수 있는 'Actionable Fix Prompts'를 생성한다.**
 
+혼란 지수는 개인 예측치가 아닌 **코호트 수준의 실패 위험도**로 해석한다.
+→ "이 화면에서 20대 대학생 코호트의 상당 비율이 혼란을 경험할 것으로 예측됨"
+
 ---
 
 ## 입출력
@@ -22,12 +25,13 @@ M3의 시뮬레이션 결과를 분석하여 혼란 지수를 계산하고,
 
 ### 프롬프트 생성 예시
 ```python
-def generate_line_fix_prompt(issue):
+def generate_line_fix_prompt(issue, cohort: str):
     return f"""
-    [UX Issue Found]
+    [UX Failure Detected — {cohort} 코호트]
     - 위치: {issue.file_path} (Line {issue.line_number})
-    - 문제: 사용자가 버튼의 역할을 인지하지 못함 (크기 너무 작음)
-    
+    - 예측 실패 원인: {issue.failure_mode}  # M2 feature와 연결
+    - 근거: {issue.evidence}  # 논문 citation
+
     [Fix Instruction for Cursor/v0]
     "{issue.line_number}번 라인의 <button> 태그에 'p-4 text-lg font-bold' 클래스를 추가해서 
      크기를 키우고, 배경색을 'bg-blue-600'으로 변경해서 가독성을 높여줘."

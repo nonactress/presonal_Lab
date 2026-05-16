@@ -2,11 +2,14 @@
 
 ## 목적
 
-M1의 UI 구조 데이터와 M2의 행동 파라미터를 결합해서
-타겟 사용자가 실제로 서비스를 탐색하는 과정을 시뮬레이션한다.
+M1의 UI 구조 데이터와 M2의 행동 제약(behavioral constraints)을 결합하여
+타겟 **코호트에서 체계적으로 발생하는 UX 실패 지점**을 시뮬레이션한다.
 
 출력은 **Think-Aloud 텍스트** — "이 버튼이 뭔지 모르겠는데... 그냥 눌러볼까?"
-형태의 내부 독백으로, 혼란이 발생한 지점과 이유를 드러낸다.
+형태의 내부 독백으로, 코호트 대표 행동 내에서 혼란이 발생한 지점과 이유를 드러낸다.
+
+> **중요:** Think-Aloud는 feature로 역추산 불가능한 창발적 결과다.
+> feature는 생성 공간을 제한하는 내부 장치일 뿐, 출력에 직접 노출되지 않는다.
 
 ---
 
@@ -21,49 +24,46 @@ M1의 UI 구조 데이터와 M2의 행동 파라미터를 결합해서
 
 ## 구현 상세
 
-### 전략: UXAgent 오픈소스 포크
+### 전략: 직접 구현 (UXAgent 포크 제외)
 
-UXAgent (arXiv 2504.09407)는 LLM 기반 UX 시뮬레이션 프레임워크다.
-이를 그대로 쓰지 않고, **행동 파라미터 주입 레이어**를 추가해서 포크한다.
+MVP 9일 기한 내 UXAgent 포크는 비현실적.
+GPT-4o 직접 호출로 동일한 Think-Aloud 생성을 구현한다.
 
-UXAgent 기본 흐름:
 ```
-화면 스크린샷 → LLM → "다음에 뭘 클릭할지" 결정 → 반복
-```
-
-우리가 추가하는 것:
-```
-화면 스크린샷 + PersonaParams → 파라미터 기반 프롬프트 생성
-→ LLM → Think-Aloud + 혼란 판단 → 반복
+코드 UI맵 (M1) + behavioral_constraints (M2)
+→ build_simulation_prompt()
+→ GPT-4o 단일 호출
+→ Think-Aloud + confusion_events (JSON)
 ```
 
-### Step 1 — 파라미터 기반 동적 프롬프트 생성
+### Step 1 — behavioral_constraints 기반 동적 프롬프트 생성
 
-PersonaParams를 자연어 컨텍스트로 변환해서 시스템 프롬프트에 주입한다.
-`value=None` (unknown) feature는 "보통 사람" 기본 서술로 대체한다.
+M2의 `build_behavioral_constraints()`가 반환한 자연어 제약을 시스템 프롬프트에 주입한다.
+**feature 수치는 LLM에 직접 전달하지 않는다.**
 
 ```python
-def build_persona_prompt(params: PersonaParams) -> str:
-    def describe(feature: str, low: str, high: str, default: str = "보통") -> str:
-        fv = params.get(feature)
-        if fv is None or fv.value is None:
-            return default   # unknown → 보통
-        return low if fv.value < 0.4 else (high if fv.value > 0.7 else "보통")
+def build_simulation_prompt(constraints: str, ui_map: dict, task: str) -> str:
+    components_desc = "\n".join([
+        f"- {c['type']} '{c['label']}' (line {c['line_number']}): {c['context']}"
+        for c in ui_map["components"]
+    ])
 
     return f"""
-당신은 지금 처음 보는 앱을 사용하는 사람입니다.
+{constraints}
 
-특성:
-- 디지털 기기 이해도: {describe("digital_literacy", "낮음", "높음")}
-- 막히면: {describe("external_help_tendency", "혼자 해결 시도", "바로 주변에 도움 요청")}
-- 빨리빨리 성향: {describe("bballi_bballi", "천천히 꼼꼼히", "빨리 끝내고 싶음")}
-- 에러 발생 시: {describe("error_anxiety", "침착하게 대처", "당황하고 멈춤")}
+지금 수행하려는 태스크: {task}
 
-각 화면에서:
-1. 지금 무엇을 해야 할지 이해했는가?
-2. 어떤 요소가 혼란스러운가?
-3. 지금 어떤 생각을 하고 있는가? (내부 독백 형식으로)
-4. 계속 진행할 것인가, 이탈할 것인가?
+화면의 UI 요소:
+{components_desc}
+
+시각적 위계 이슈: {ui_map.get('visual_hierarchy', '없음')}
+
+각 UI 요소에 대해 순서대로:
+1. 이 요소의 역할을 즉시 이해했는가?
+2. 어떤 생각이 드는가? (내부 독백 형식, 1~2문장)
+3. 다음 행동은? (클릭 / 스킵 / 혼란으로 이탈)
+
+가장 혼란스러운 지점 하나를 명시하라.
     """
 ```
 
@@ -87,13 +87,15 @@ def build_persona_prompt(params: PersonaParams) -> str:
 인내심 파라미터(`patience_threshold`)를 소진하는 방식으로 이탈을 결정한다.
 
 ```python
-patience = params["patience_threshold"]  # 예: 0.3
+# patience는 M2 params에서 로드하되 LLM에 직접 노출하지 않음
+# LLM의 think-aloud에서 이탈 신호를 추출하여 판단
+patience_budget = params["features"]["patience_threshold_sec"]["value"]  # 초 단위
 
 for screen in screens:
-    confusion_level = scorer.get_confusion(think_aloud)
-    patience -= confusion_level * 0.1
+    confusion_level = scorer.get_confusion(think_aloud)  # M4
+    patience_budget -= confusion_level * 0.5  # 혼란 1회당 0.5초 소진
 
-    if patience <= 0:
+    if patience_budget <= 0:
         return SimulationResult(status="abandoned", at_screen=screen.id)
 ```
 
