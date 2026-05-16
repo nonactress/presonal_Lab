@@ -60,6 +60,37 @@ def detect_ui_patterns(components: list, potential_issues: list) -> list:
 
     return list(set(patterns))
 
+PREVIEW_SYSTEM_PROMPT = """주어진 React/TSX 컴포넌트를 브라우저에서 바로 렌더링 가능한 HTML body 내용으로 변환하라.
+
+규칙:
+- Tailwind 클래스를 모두 동등한 inline style로 변환하라
+- 외부 CDN, script 태그, import 없이 순수 HTML+inline style만 사용하라
+- 폰트: font-family: -apple-system, system-ui, sans-serif
+- 모바일 너비(375px) 기준으로 렌더링
+- React 문법(className, onClick 등)을 HTML 속성(class, 이벤트 없음)으로 변환
+- 결과는 JSON {"preview_body": "...HTML string..."} 형식으로 반환하라"""
+
+def generate_preview_html(source_code: str) -> str:
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": PREVIEW_SYSTEM_PROMPT},
+                {"role": "user", "content": source_code}
+            ],
+            response_format={"type": "json_object"}
+        )
+        body = json.loads(response.choices[0].message.content).get("preview_body", "")
+        return (
+            "<!DOCTYPE html><html><head>"
+            "<meta charset='utf-8'>"
+            "<meta name='viewport' content='width=375'>"
+            "<style>body{margin:0;padding:12px;font-family:-apple-system,system-ui,sans-serif;max-width:375px}</style>"
+            f"</head><body>{body}</body></html>"
+        )
+    except Exception:
+        return ""
+
 def analyze_code(source_code: str, task: str) -> dict:
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -74,4 +105,5 @@ def analyze_code(source_code: str, task: str) -> dict:
         result.get("components", []),
         result.get("potential_issues", [])
     )
+    result["preview_html"] = generate_preview_html(source_code)
     return result

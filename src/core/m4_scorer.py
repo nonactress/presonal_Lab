@@ -32,7 +32,7 @@ def generate_fix_prompts(simulation_result: dict, source_code: str, cohort: str)
         prompts.append(prompt)
     return prompts
 
-def build_scorer_output(simulation_result: dict, source_code: str, cohort: str = "20대_대학생") -> dict:
+def build_scorer_output(simulation_result: dict, source_code: str, cohort: str = "20대_대학생", preview_html: str = "") -> dict:
     return {
         "confusion_score": calculate_confusion_score(simulation_result),
         "cohort_framing": f"{cohort} 코호트에서 이 UI의 실패 위험도",
@@ -41,4 +41,5 @@ def build_scorer_output(simulation_result: dict, source_code: str, cohort: str =
         "think_aloud": simulation_result.get("think_aloud", ""),
         "abandoned": simulation_result.get("abandoned", False),
         "source_code": source_code,
+        "preview_html": preview_html,
     }

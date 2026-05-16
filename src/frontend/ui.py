@@ -136,11 +136,27 @@ async def call_analysis(files, persona_desc):
 
                 fix_prompts_val = "\n\n".join(res.get("fix_prompts", []))
 
+                # UI 미리보기 iframe
+                raw_preview = res.get("preview_html", "")
+                if raw_preview:
+                    encoded = escape(raw_preview, quote=True)
+                    preview_html_widget = (
+                        '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px">'
+                        '<p style="font-size:0.8em;color:#64748b;margin:0 0 8px">📱 UI 미리보기 (375px 모바일 기준)</p>'
+                        f'<iframe srcdoc="{encoded}" '
+                        'style="width:100%;height:520px;border:1px solid #e2e8f0;border-radius:6px;background:#fff">'
+                        '</iframe>'
+                        '</div>'
+                    )
+                else:
+                    preview_html_widget = '<p style="color:#9ca3af;font-size:0.9em">UI 미리보기 생성 실패</p>'
+
                 yield {
                     progress_screen: gr.update(visible=False),
                     result_screen: gr.update(visible=True),
                     score_display: score_val,
                     drop_off_display: f"### {abandoned_str}\n{cohort_framing}",
+                    ui_preview_display: preview_html_widget,
                     timeline_display: timeline_html,
                     fix_prompts: fix_prompts_val
                 }
@@ -188,8 +204,11 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     with gr.Column(visible=False) as result_screen:
         gr.Markdown("### 📊 Step 3: UX 분석 결과")
         with gr.Row():
-            score_display = gr.Label(label="전체 혼란 지수")
-            drop_off_display = gr.Markdown("")
+            with gr.Column(scale=1):
+                score_display = gr.Label(label="전체 혼란 지수")
+                drop_off_display = gr.Markdown("")
+            with gr.Column(scale=1):
+                ui_preview_display = gr.HTML()
 
         timeline_display = gr.HTML()
 
@@ -202,7 +221,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     analyze_btn.click(
         call_analysis,
         inputs=[file_input, persona_input],
-        outputs=[input_screen, progress_screen, result_screen, status_text, score_display, drop_off_display, timeline_display, fix_prompts, error_msg]
+        outputs=[input_screen, progress_screen, result_screen, status_text, score_display, drop_off_display, ui_preview_display, timeline_display, fix_prompts, error_msg]
     )
 
     back_btn.click(
