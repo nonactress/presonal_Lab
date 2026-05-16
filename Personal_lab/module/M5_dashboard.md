@@ -42,13 +42,14 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             task_input = gr.Textbox(label="User Task (e.g., 'Sign up')")
         
         with gr.Column(scale=1):
-            persona_drop = gr.Dropdown(["60대(저리터러시)", "20대(일반)"], label="Target Persona")
+            # MVP: 20대 대학생 only. 서비스 버전에서 확장.
+            persona_drop = gr.Dropdown(["20대 대학생 (MVP)"], label="Target Cohort")
             analyze_btn = gr.Button("Analyze UX", variant="primary")
             
     with gr.Row():
         with gr.Column():
-            score_display = gr.Label(label="UX Confusion Index")
-            timeline_display = gr.HTML(label="User Mental Simulation")
+            score_display = gr.Label(label="코호트 UX 혼란 지수")
+            timeline_display = gr.HTML(label="코호트 대표 Think-Aloud")
             
         with gr.Column():
             gr.Markdown("### 🛠️ Vibe Coding Fix Prompts")

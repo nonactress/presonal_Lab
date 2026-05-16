@@ -4,3 +4,6 @@ gradio
 pydantic
 httpx
 python-dotenv
+openai>=1.0.0
+pytest
+pytest-asyncio
