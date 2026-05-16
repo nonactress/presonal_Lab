@@ -15,4 +15,9 @@ def run_pipeline(codebase: list, persona_desc: str, task: str = "서비스 탐�
 
     simulation = run_simulation(ui_map, constraints, research_context, task)
 
-    return build_scorer_output(simulation, main_file["content"], cohort)
+    return build_scorer_output(
+        simulation,
+        main_file["content"],
+        cohort,
+        preview_html=ui_map.get("preview_html", "")
+    )

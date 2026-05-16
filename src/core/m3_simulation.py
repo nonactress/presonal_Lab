@@ -6,7 +6,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def _make_client():
-    return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    return OpenAI(
+        api_key=os.getenv("GROQ_API_KEY"),
+        base_url="https://api.groq.com/openai/v1"
+    )
 
 try:
     client = _make_client()
@@ -21,6 +24,10 @@ M3_SYSTEM_TEMPLATE = """[관련 연구 근거]
 
 위 연구와 행동 제약을 반드시 반영하여 think-aloud를 생성하라.
 한국 사용자 맥락(빨리빨리 문화, 카카오/네이버 멘탈모델)을 반영하라.
+
+[언어 규칙]
+모든 텍스트(think_aloud, reason, evidence, abandonment_reason)는 반드시 한국어로 작성하라.
+저자명과 연도는 영문 유지 (예: "Nah (2004): 피드백 없으면 2초 후 이탈").
 
 아래 JSON 형식으로만 반환하라:
 {{
@@ -63,7 +70,7 @@ UI 요소:
 def run_simulation(ui_map: dict, constraints: str, research_context: str, task: str) -> dict:
     messages = build_simulation_prompt(constraints, research_context, ui_map, task)
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="llama-3.3-70b-versatile",
         messages=messages,
         response_format={"type": "json_object"}
     )
