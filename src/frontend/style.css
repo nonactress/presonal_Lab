@@ -262,6 +262,108 @@ td.li {
 .btn-copy:hover  { border-color: var(--accent); color: var(--accent); }
 .btn-copy.copied { border-color: #10B981; color: #10B981; background: rgba(16,185,129,0.08); }
 
+/* ── Persona Widget ──────────────────────── */
+@keyframes persona-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-5px); }
+}
+
+@keyframes persona-wiggle {
+  0%, 100% { transform: translateY(var(--float-y, 0px)) rotate(0deg); }
+  25%       { transform: translateY(var(--float-y, 0px)) rotate(-4deg); }
+  75%       { transform: translateY(var(--float-y, 0px)) rotate(4deg); }
+}
+
+@keyframes persona-appear {
+  0%   { opacity: 0; transform: scale(0.75); }
+  70%  { transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scan-line-move {
+  0%   { transform: translateY(0px); opacity: 0.4; }
+  50%  { opacity: 0.7; }
+  100% { transform: translateY(26px); opacity: 0; }
+}
+
+.persona-wrap {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+  animation: persona-float 2s ease-in-out infinite;
+}
+
+.persona-wrap:hover {
+  animation: persona-wiggle 0.35s ease-in-out 2,
+             persona-float 2s ease-in-out infinite 0.7s;
+}
+
+.persona-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: #475569;
+  letter-spacing: 0.04em;
+  text-align: center;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: rgba(15, 23, 42, 0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.persona-svg-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  transition: border-color 0.3s;
+}
+
+.persona-svg-wrap svg {
+  animation: persona-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  display: block;
+}
+
+.persona-svg-wrap .scan-line {
+  animation: scan-line-move 1s ease-in-out infinite;
+}
+
+.persona-minimized-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 50;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.persona-minimized-btn:hover {
+  background: rgba(30, 41, 59, 0.9);
+}
+
 /* ── Detail toggle ───────────────────────── */
 .detail-toggle {
   width: 100%;
