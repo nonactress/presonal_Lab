@@ -233,7 +233,9 @@ document.addEventListener('alpine:init', () => {
         return;
       }
       this.error = '';
+      this.personaVariant = this.getPersonaVariant(this.personaDesc);
       this.screen = 'progress';
+      this.startThinking();
       this.statusStep = 1;
 
       await sleep(800);
@@ -260,11 +262,13 @@ document.addEventListener('alpine:init', () => {
           throw new Error('backend');
         }
 
+        this.stopThinking();
         this.result = await response.json();
         this.detailOpen = false;
         this.screen = 'result';
 
       } catch (err) {
+        this.stopThinking();
         this.screen = 'input';
         this.error = err.message === 'backend'
           ? '⚠️ 분석 중 오류가 발생했어요. 파일 형식을 확인하거나 잠시 후 다시 시도해주세요.'
@@ -282,6 +286,9 @@ document.addEventListener('alpine:init', () => {
     },
 
     reset() {
+      this.stopThinking();
+      this.characterState = 'idle';
+      this.personaVariant = 'default';
       this.screen = 'input';
       this.result = null;
       this.files = [];
