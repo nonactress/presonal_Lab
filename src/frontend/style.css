@@ -434,6 +434,314 @@ td.li {
   color: var(--ink-3);
 }
 
+/* ── Source screen ───────────────────────── */
+.source-chips-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+.source-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-mid);
+  background: var(--surface-raised);
+  color: var(--ink-2);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.source-chip:hover,
+.source-chip.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(59,130,246,0.08);
+}
+
+/* ── Chat screen ─────────────────────────── */
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+.chat-bubble-bot {
+  align-self: flex-start;
+  max-width: 82%;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px 16px 16px 16px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: var(--ink-1);
+  line-height: 1.5;
+}
+
+.chat-bubble-user {
+  align-self: flex-end;
+  max-width: 82%;
+  background: var(--accent);
+  border-radius: 16px 4px 16px 16px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #fff;
+  line-height: 1.5;
+}
+
+.chat-trait-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.trait-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-mid);
+  background: var(--surface-raised);
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.trait-chip.selected {
+  border-color: var(--accent);
+  background: rgba(59,130,246,0.12);
+  color: var(--accent);
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-mid);
+  color: var(--ink-1);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.chat-input:focus { border-color: var(--accent); }
+
+.chat-send-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.chat-send-btn:hover:not(:disabled) { background: var(--accent-hover); }
+.chat-send-btn:disabled { background: var(--surface-elevated); cursor: not-allowed; }
+
+/* ── Cast cards ──────────────────────────── */
+.cast-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 6px;
+}
+.cast-card:hover { border-color: var(--border-mid); }
+.cast-card.selected {
+  border-color: var(--accent);
+  background: rgba(59,130,246,0.06);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+.cast-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  flex-shrink: 0;
+}
+.cast-card.selected .cast-avatar {
+  background: rgba(59,130,246,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cast-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-1);
+  margin-right: 4px;
+}
+
+.cast-meta {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.cast-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.cast-trait {
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--surface-elevated);
+  color: var(--ink-3);
+  font-family: 'JetBrains Mono', monospace;
+}
+.cast-card.selected .cast-trait {
+  background: rgba(59,130,246,0.1);
+  color: #60a5fa;
+}
+
+.cast-pick-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border-mid);
+  color: var(--ink-3);
+  font-family: 'JetBrains Mono', monospace;
+}
+.cast-card.selected .cast-pick-badge {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ── Result sidebar ──────────────────────── */
+.result-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.result-sidebar {
+  width: 72px;
+  border-right: 1px solid var(--border);
+  background: var(--surface-raised);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 0 1rem;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+}
+
+.result-sidebar-btn {
+  width: 54px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  line-height: 1.3;
+}
+.result-sidebar-btn:hover { background: var(--surface-elevated); color: var(--ink-2); }
+.result-sidebar-btn.active {
+  background: rgba(59,130,246,0.12);
+  color: var(--accent);
+}
+
+.result-sidebar-icon {
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.result-main {
+  flex: 1;
+  padding: 2.5rem 2rem 4rem;
+  max-width: 680px;
+}
+
+/* ── Insight 2-col ───────────────────────── */
+.insight-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.insight-col {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.insight-col-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.insight-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.insight-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+  min-width: 16px;
+}
+
 /* ── Severity label ──────────────────────── */
 .sev-label {
   font-family: 'JetBrains Mono', monospace;

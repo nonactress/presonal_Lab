@@ -313,7 +313,7 @@ function buildPersonaSvg(features, strokeColor, animOpts) {
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('personaApp', () => ({
-    screen: 'input',
+    screen: 'source',
     files: [],
     personaDesc: '',
     taskDesc: '',
@@ -328,6 +328,32 @@ document.addEventListener('alpine:init', () => {
     personaMinimized: false,
     _thinkInterval: null,
     _featureFetch: null,
+
+    // Source screen
+    sourceMode: 'file',
+    sourcePort: '',
+    sourcePath: '',
+    sourceUrl: '',
+
+    // Persona chat
+    chatMessages: [],
+    chatInput: '',
+    chatStep: 0,
+    selectedTraits: [],
+    chatBotThinking: false,
+    chatPersonaHint: '',
+
+    // Cast
+    castPersonas: [],
+    selectedPersonaIdx: 0,
+    castLoading: false,
+
+    // Result sidebar
+    resultSection: 'tldr',
+    liveThought: '',
+
+    // Selected cast persona (shown in result)
+    selectedCastPersona: null,
 
     physX: 100,
     physY: 100,
@@ -411,8 +437,134 @@ document.addEventListener('alpine:init', () => {
       }, 500);
 
       this.$watch('personaDesc', (val) => {
-        if (this.screen === 'input') this._featureFetch(val);
+        this._featureFetch(val);
       });
+    },
+
+    get sourceReady() {
+      if (this.sourceMode === 'file') return this.files.length > 0;
+      if (this.sourceMode === 'localhost') return this.sourcePort.trim().length > 0;
+      if (this.sourceMode === 'url') return this.sourceUrl.trim().length > 0;
+      return false;
+    },
+
+    get sourceLabel() {
+      if (this.sourceMode === 'localhost') return `localhost:${this.sourcePort}${this.sourcePath ? '/' + this.sourcePath : ''}`;
+      if (this.sourceMode === 'url') return this.sourceUrl || 'URL';
+      return `${this.files.length}개 파일`;
+    },
+
+    get sourceTargetUrl() {
+      if (this.sourceMode === 'localhost') {
+        const port = this.sourcePort.trim();
+        const path = this.sourcePath.trim();
+        return `http://localhost:${port}${path ? '/' + path.replace(/^\//, '') : ''}`;
+      }
+      if (this.sourceMode === 'url') return this.sourceUrl.trim();
+      return null;
+    },
+
+    proceedFromSource() {
+      if (!this.sourceReady) return;
+      this.error = '';
+      this.chatMessages = [];
+      this.chatInput = '';
+      this.chatStep = 0;
+      this.selectedTraits = [];
+      this.chatPersonaHint = '';
+      this.screen = 'persona_chat';
+      this.$nextTick(() => this._botMessage(
+        '이 앱을 테스트할 유저가 어떤 사람이에요? (이름, 나이, 직업 등)',
+        null
+      ));
+    },
+
+    _botMessage(text, chips) {
+      this.chatBotThinking = true;
+      setTimeout(() => {
+        this.chatBotThinking = false;
+        this.chatMessages.push({ role: 'bot', text, chips: chips || [] });
+        this.$nextTick(() => {
+          const log = this.$refs.chatLog;
+          if (log) log.scrollTop = log.scrollHeight;
+        });
+      }, 700 + Math.random() * 400);
+    },
+
+    toggleTrait(chip) {
+      if (this.selectedTraits.includes(chip)) {
+        this.selectedTraits = this.selectedTraits.filter(t => t !== chip);
+      } else {
+        this.selectedTraits.push(chip);
+      }
+    },
+
+    submitChat() {
+      const text = this.chatInput.trim();
+      const traits = [...this.selectedTraits];
+      if (!text && traits.length === 0) return;
+      if (this.chatBotThinking || this.chatStep >= 2) return;
+
+      if (this.chatStep === 0) {
+        this.chatMessages.push({ role: 'user', text });
+        this.chatInput = '';
+        this.chatPersonaHint = text;
+        this.chatStep = 1;
+        this._botMessage(
+          '어떤 걸 중요하게 생각하는 사람이에요?',
+          ['속도', '한국어 지원', '신뢰성', '모바일', '가격', '편리함', '보안', '정보량']
+        );
+      } else if (this.chatStep === 1) {
+        const traitText = traits.length > 0 ? traits.join(', ') : text;
+        const displayText = traits.length > 0
+          ? traits.join(' · ')
+          : text;
+        this.chatMessages.push({ role: 'user', text: displayText });
+        this.chatInput = '';
+        this.selectedTraits = [];
+        this.chatPersonaHint += ` / ${traitText}`;
+        this.chatStep = 2;
+        this._botMessage('좋아요! 테스터 후보를 만들고 있어요…', null);
+        setTimeout(() => this._generateCast(), 1200);
+      }
+    },
+
+    async _generateCast() {
+      this.castLoading = true;
+      this.screen = 'cast';
+      try {
+        const res = await fetch('/generate-cast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            persona_hint: this.chatPersonaHint,
+            source_desc: this.sourceLabel,
+          }),
+        });
+        if (!res.ok) throw new Error('cast');
+        const data = await res.json();
+        this.castPersonas = data.personas || [];
+        this.selectedPersonaIdx = 0;
+      } catch (_) {
+        this.castPersonas = [
+          { name: '박지민', age: 28, role: '대학원생', traits: ['in a hurry', '한국어', 'first-time'], goal: '서비스 탐색하기' },
+          { name: '김도현', age: 42, role: '직장인', traits: ['skeptical', '가격 민감', 'power user'], goal: '효율적으로 완료하기' },
+          { name: '이수아', age: 19, role: '고등학생', traits: ['mobile-only', 'curious', 'social'], goal: '빠르게 해보기' },
+          { name: '최영자', age: 63, role: '자영업', traits: ['low-tech', '한국어만', 'cautious'], goal: '안전하게 사용하기' },
+        ];
+        this.selectedPersonaIdx = 0;
+      } finally {
+        this.castLoading = false;
+      }
+    },
+
+    runSelected() {
+      const p = this.castPersonas[this.selectedPersonaIdx];
+      if (!p) return;
+      this.selectedCastPersona = p;
+      this.personaDesc = `${p.name}, ${p.age}세 ${p.role}, ${(p.traits || []).join(', ')}`;
+      this.personaFeatures = extractFeatures(this.personaDesc);
+      this.analyze();
     },
 
     handleFiles(e) {
@@ -438,6 +590,22 @@ document.addEventListener('alpine:init', () => {
 
     _maxX() { return window.innerWidth  - 66; },
     _maxY() { return window.innerHeight - 78 - 80; },
+
+    _floorY(x) {
+      const H = 78;
+      const cx = x + 33;
+      const feetY = this.physY + H;
+      const maxY = this._maxY();
+      let floor = maxY;
+      for (const el of document.querySelectorAll('[data-platform]')) {
+        const r = el.getBoundingClientRect();
+        if (cx < r.left || cx > r.right) continue;
+        const standY = r.top - H;
+        if (standY < 0 || standY >= maxY) continue;
+        if (r.top >= feetY - 24 && standY < floor) floor = standY;
+      }
+      return floor;
+    },
 
     _scheduleIdle(delay) {
       clearTimeout(this._idleTimer);
@@ -475,7 +643,7 @@ document.addEventListener('alpine:init', () => {
 
       const tickWalk = (dt) => {
         const tx = Math.max(0, Math.min(this._maxX(), this._mouseX - W / 2));
-        const ty = Math.max(0, Math.min(this._maxY(), this._mouseY - H / 2));
+        const ty = this._floorY(tx);
         const dx = tx - this.physX, dy = ty - this.physY;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 8) {
@@ -499,6 +667,8 @@ document.addEventListener('alpine:init', () => {
       const tickIdle = (dt) => {
         this._bobY = Math.sin(Date.now() / 900) * 1.5;
         this._scaleX = 1; this._scaleY = 1;
+        const floor = this._floorY(this.physX);
+        if (this.physY < floor - 16) { this._animState = 'walk'; }
         const dx = this._mouseX - W / 2 - this.physX;
         const dy = this._mouseY - H / 2 - this.physY;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -590,8 +760,9 @@ document.addEventListener('alpine:init', () => {
         this._thrownVY += GRAVITY * dt;
         this.physX += this._thrownVX * dt;
         this.physY += this._thrownVY * dt;
-        if (this.physY >= this._maxY()) {
-          this.physY = this._maxY();
+        const _floor = this._floorY(this.physX);
+        if (this.physY >= _floor) {
+          this.physY = _floor;
           this._thrownVY = -Math.abs(this._thrownVY) * DAMPING;
           this._thrownVX *= FRICTION;
           this._scaleX = 1.3; this._scaleY = 0.65;
@@ -747,12 +918,15 @@ document.addEventListener('alpine:init', () => {
     },
 
     async analyze() {
-      if (!this.files.length) {
-        this.error = '파일을 업로드해주세요.';
+      const hasFiles = this.files.length > 0;
+      const hasUrl = !!this.sourceTargetUrl;
+      if (!hasFiles && !hasUrl) {
+        this.error = '소스를 선택해주세요.';
         return;
       }
       this.error = '';
-      this.personaFeatures = extractFeatures(this.personaDesc);
+      this.liveThought = '';
+      this.resultSection = 'tldr';
       this.screen = 'progress';
       this.startThinking();
       this._animState = 'run';
@@ -763,13 +937,19 @@ document.addEventListener('alpine:init', () => {
       this.statusStep = 2;
       await sleep(600);
       this.statusStep = 3;
+      this.liveThought = `${this.personaDesc.split(',')[0] || '페르소나'}이(가) 앱을 살펴보고 있어요…`;
 
       try {
         const formData = new FormData();
         formData.append('persona_desc', this.personaDesc.trim() || '20대 대학생');
         formData.append('task', this.taskDesc.trim() || '서비스 탐색하기');
-        for (const file of this.files) {
-          formData.append('files', file);
+
+        if (hasUrl) {
+          formData.append('target_url', this.sourceTargetUrl);
+        } else {
+          for (const file of this.files) {
+            formData.append('files', file);
+          }
         }
 
         const response = await fetch('/analyze', {
@@ -780,12 +960,11 @@ document.addEventListener('alpine:init', () => {
         this.statusStep = 4;
         await sleep(300);
 
-        if (!response.ok) {
-          throw new Error('backend');
-        }
+        if (!response.ok) throw new Error('backend');
 
         this.stopThinking();
         this.result = await response.json();
+        this.liveThought = '';
         this.detailOpen = false;
         this.screen = 'result';
         this._animState = 'idle';
@@ -793,7 +972,8 @@ document.addEventListener('alpine:init', () => {
 
       } catch (err) {
         this.stopThinking();
-        this.screen = 'input';
+        this.liveThought = '';
+        this.screen = 'source';
         this.error = err.message === 'backend'
           ? '⚠️ 분석 중 오류가 발생했어요. 파일 형식을 확인하거나 잠시 후 다시 시도해주세요.'
           : '⚠️ 서버에 연결할 수 없어요. 백엔드가 실행 중인지 확인해주세요. (http://localhost:8000)';
@@ -820,11 +1000,26 @@ document.addEventListener('alpine:init', () => {
       this._scaleY = 1;
       this._bobY = 0;
       clearTimeout(this._idleTimer);
-      this.screen = 'input';
+      this.screen = 'source';
       this.result = null;
       this.files = [];
       this.error = '';
       this.personaDesc = '';
+      this.taskDesc = '';
+      this.sourceMode = 'file';
+      this.sourcePort = '';
+      this.sourcePath = '';
+      this.sourceUrl = '';
+      this.chatMessages = [];
+      this.chatInput = '';
+      this.chatStep = 0;
+      this.selectedTraits = [];
+      this.chatPersonaHint = '';
+      this.castPersonas = [];
+      this.selectedPersonaIdx = 0;
+      this.selectedCastPersona = null;
+      this.liveThought = '';
+      this.resultSection = 'tldr';
     },
 
 
