@@ -288,52 +288,55 @@ td.li {
 
 .persona-wrap {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
   z-index: 50;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  cursor: pointer;
+  gap: 6px;
+  cursor: grab;
   user-select: none;
-  animation: persona-float 2s ease-in-out infinite;
+  will-change: left, top, transform;
+  transform-origin: center bottom;
 }
 
-.persona-wrap:hover {
-  animation: persona-wiggle 0.35s ease-in-out 2,
-             persona-float 2s ease-in-out infinite 0.7s;
+.persona-wrap.is-dragging,
+.persona-wrap.is-thrown {
+  cursor: grabbing;
 }
 
 .persona-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.6rem;
-  color: #475569;
-  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  letter-spacing: 0.06em;
   text-align: center;
-  max-width: 90px;
+  max-width: 200px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: rgba(15, 23, 42, 0.8);
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(17, 24, 39, 0.7);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .persona-svg-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
-  padding: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   transition: border-color 0.3s;
 }
 
 .persona-svg-wrap svg {
+  width: auto;
+  height: 40vh;
+  max-height: 380px;
+  min-height: 180px;
   animation: persona-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   display: block;
 }
@@ -380,3 +383,77 @@ td.li {
   transition: background 0.15s, border-color 0.15s;
 }
 .detail-toggle:hover { background: var(--surface-elevated); border-color: var(--border-mid); }
+
+/* ── Textarea ────────────────────────────── */
+.textarea-persona {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-mid);
+  color: var(--ink-1);
+}
+.textarea-persona:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+/* ── Remove file button ──────────────────── */
+.remove-file-btn {
+  margin-left: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--ink-4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.remove-file-btn:hover { color: #f87171; }
+
+/* ── Nav back button ─────────────────────── */
+.btn-nav-back {
+  font-size: 0.75rem;
+  color: var(--ink-4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.btn-nav-back:hover { color: var(--ink-2); }
+
+/* ── Risk dot ────────────────────────────── */
+.risk-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.risk-dot--critical { background: #EF4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+.risk-dot--warning  { background: #F59E0B; box-shadow: 0 0 6px rgba(245, 158, 11, 0.5); }
+.risk-dot--ok       { background: #10B981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.5); }
+
+/* ── Upload SVG icon ─────────────────────── */
+.upload-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 auto 0.75rem;
+  display: block;
+  color: var(--ink-3);
+}
+
+/* ── Severity label ──────────────────────── */
+.sev-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.sev-label--high { color: #f87171; }
+.sev-label--med  { color: #fbbf24; }
+.sev-label--low  { color: #60a5fa; }
