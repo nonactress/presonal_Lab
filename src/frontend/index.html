@@ -287,13 +287,8 @@
   <!-- ═══════════════════════════════════════ PERSONA WIDGET -->
   <div class="persona-wrap"
        x-show="!personaMinimized"
-       :class="physState === 'thrown' ? 'is-thrown' : physState === 'dragging' ? 'is-dragging' : ''"
-       :style="`left:${physX}px;top:${physY}px`"
-       @mousedown.prevent="onPersonaMousedown($event)"
-       x-transition:leave="transition ease-in duration-150"
-       x-transition:leave-start="opacity-100 scale-100"
-       x-transition:leave-end="opacity-0 scale-75">
-    <div class="persona-label" x-text="personaLabel"></div>
+       :class="_animState === 'thrown' ? 'is-thrown' : _animState === 'dragging' ? 'is-dragging' : ''"
+       @mousedown.prevent="onPersonaMousedown($event)">
     <div class="persona-svg-wrap"></div>
   </div>
 
