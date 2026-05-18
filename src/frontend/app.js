@@ -657,10 +657,13 @@ document.addEventListener('alpine:init', () => {
           wrap.style.transform = `scaleX(${flipX * this._scaleX}) scaleY(${this._scaleY})`;
         }
 
-        // Direct DOM: SVG re-render on walking/roaming screens
-        if (this.screen === 'input' || this.screen === 'result') {
-          const svgWrap = this.$el.querySelector('.persona-svg-wrap');
-          if (svgWrap) {
+        // Direct DOM: SVG re-render (all screens — rAF is sole owner of .persona-svg-wrap)
+        const svgWrap = this.$el.querySelector('.persona-svg-wrap');
+        if (svgWrap) {
+          if (this.screen === 'progress') {
+            const staticSvg = PERSONA_SVGS[this.characterState] || PERSONA_SVGS.thinking;
+            if (svgWrap.innerHTML !== staticSvg) svgWrap.innerHTML = staticSvg;
+          } else {
             const svgState = this._animState === 'jump' && this._jumpPhase !== 'none' ? 'jump'
               : this._animState === 'sit'    ? 'sit'
               : this._animState === 'run'    ? 'run'
@@ -824,13 +827,6 @@ document.addEventListener('alpine:init', () => {
       this.personaDesc = '';
     },
 
-    get currentPersonaSvg() {
-      if (this.screen === 'progress') {
-        return PERSONA_SVGS[this.characterState] || PERSONA_SVGS.thinking;
-      }
-      // input/result screens: rAF loop renders directly into .persona-svg-wrap
-      return '';
-    },
 
     get personaLabel() {
       if (this.screen === 'progress') return '분석 중...';

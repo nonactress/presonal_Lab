@@ -64,7 +64,9 @@
         <div @click="$refs.fileInput.click()"
              class="upload-zone"
              :class="dragging && 'drag-over'">
-          <div class="text-3xl mb-3">📂</div>
+          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+          </svg>
           <p class="text-sm font-medium mb-1" style="color:#CBD5E1">파일을 드래그하거나 클릭하여 업로드</p>
           <p class="text-xs" style="color:#475569">.tsx · .jsx · .html · .vue · .js · .ts · .zip</p>
         </div>
@@ -76,11 +78,7 @@
           <div class="flex items-center justify-between px-3 py-2 rounded-lg"
                style="background:#1E293B;border:1px solid rgba(148,163,184,0.12)">
             <span class="font-mono text-xs truncate" style="color:#94A3B8" x-text="file.name"></span>
-            <button @click="removeFile(i)"
-                    class="ml-3 text-xs transition-colors"
-                    style="color:#475569"
-                    onmouseover="this.style.color='#f87171'"
-                    onmouseout="this.style.color='#475569'">✕</button>
+            <button @click="removeFile(i)" class="remove-file-btn">✕</button>
           </div>
         </template>
       </div>
@@ -93,10 +91,18 @@
         </label>
         <textarea x-model="personaDesc" rows="3"
                   placeholder="예: 디지털 리터러시 낮은 50대 직장인 / 앱을 처음 쓰는 20대 대학생 / 바쁜 30대 프리랜서"
-                  class="w-full px-4 py-3 rounded-xl text-sm resize-none outline-none transition-all duration-200"
-                  style="background:#1E293B;border:1px solid rgba(148,163,184,0.2);color:#F1F5F9"
-                  onfocus="this.style.borderColor='#3B82F6';this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.12)'"
-                  onblur="this.style.borderColor='rgba(148,163,184,0.2)';this.style.boxShadow='none'"></textarea>
+                  class="textarea-persona"></textarea>
+      </div>
+
+      <!-- Task input -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-1.5" style="color:#94A3B8">
+          테스트 태스크
+          <span class="ml-2 text-xs font-normal" style="color:#475569">유저가 수행할 목표 행동</span>
+        </label>
+        <input type="text" x-model="taskDesc"
+               placeholder="예: 회원가입하기 / 상품 장바구니에 담기 / 결제 완료하기"
+               class="textarea-persona" style="padding:10px 14px">
       </div>
 
       <!-- CTA -->
@@ -164,22 +170,18 @@
       <!-- Nav bar -->
       <div class="flex items-center justify-between mb-8">
         <div class="font-mono text-xs tracking-widest uppercase" style="color:#3B82F6">PersonaLab — 분석 결과</div>
-        <button @click="reset()"
-                class="text-xs transition-colors"
-                style="color:#475569"
-                onmouseover="this.style.color='#94A3B8'"
-                onmouseout="this.style.color='#475569'">← 새 분석</button>
+        <button @click="reset()" class="btn-nav-back">← 새 분석</button>
       </div>
 
       <!-- Risk banner -->
       <div x-show="result" class="flex items-center gap-4 px-5 py-4 rounded-xl mb-6"
            :style="`background:${riskConfig.bg};border:1px solid ${riskConfig.border}`">
-        <div class="text-2xl flex-shrink-0" x-text="riskConfig.icon"></div>
+        <div class="risk-dot" :class="`risk-dot--${result?.risk_level}`"></div>
         <div class="flex-1 min-w-0">
           <div class="font-bold text-base" :style="`color:${riskConfig.color}`"
                x-text="result?.risk_label"></div>
           <div class="text-xs mt-0.5" style="color:#64748B"
-               x-text="result?.abandoned ? '⚠️ 이탈 예측됨' : '✅ 완료 가능'"></div>
+               x-text="result?.abandoned ? '이탈 예측됨' : '완료 가능'"></div>
         </div>
         <div class="flex gap-2 flex-shrink-0">
           <span x-show="result?.issues_summary?.critical"
@@ -218,7 +220,7 @@
 
       <!-- Think-aloud -->
       <div class="think-aloud-box mb-6">
-        <div class="font-mono text-xs mb-2" style="color:#60a5fa">💬 페르소나 Think-aloud</div>
+        <div class="font-mono text-xs mb-2" style="color:#60a5fa">페르소나 Think-aloud</div>
         <p class="text-sm leading-relaxed italic" style="color:#CBD5E1"
            x-text="result?.think_aloud"></p>
         <p x-show="result?.dropout_point"
@@ -230,13 +232,13 @@
       <div class="mb-6">
         <div class="flex items-start justify-between mb-3">
           <div>
-            <div class="font-semibold text-base" style="color:#F1F5F9">🛠 Vibe Coding Fix Prompts</div>
+            <div class="font-semibold text-base" style="color:#F1F5F9">Vibe Coding Fix Prompts</div>
             <div class="text-xs mt-0.5" style="color:#475569">Cursor / v0 / Claude에 붙여넣으세요</div>
           </div>
           <button @click="copyPrompts()"
                   class="btn-copy"
                   :class="copied && 'copied'">
-            <span x-text="copied ? '✓ 복사됨' : '📋 복사'"></span>
+            <span x-text="copied ? '✓ 복사됨' : '복사'"></span>
           </button>
         </div>
         <textarea class="fix-textarea" readonly rows="8"
@@ -246,7 +248,7 @@
       <!-- Detail collapsible -->
       <div class="mb-8">
         <button class="detail-toggle" @click="detailOpen = !detailOpen">
-          <span style="color:#94A3B8">🔍 코드 이슈 상세 / UI 미리보기</span>
+          <span style="color:#94A3B8">코드 이슈 상세 · UI 미리보기</span>
           <span class="font-mono text-xs" style="color:#475569"
                 x-text="detailOpen ? '▲ 접기' : '▼ 펼치기'"></span>
         </button>
@@ -269,7 +271,7 @@
                style="border:1px solid rgba(148,163,184,0.12)">
             <div class="px-4 py-2 font-mono text-xs"
                  style="background:#1E293B;border-bottom:1px solid rgba(148,163,184,0.08);color:#475569">
-              📱 UI 미리보기 (375px 기준)
+              UI 미리보기 (375px 기준)
             </div>
             <iframe :srcdoc="result?.preview_html"
                     style="width:100%;height:520px;border:none;background:#fff;display:block"></iframe>
@@ -285,13 +287,14 @@
   <!-- ═══════════════════════════════════════ PERSONA WIDGET -->
   <div class="persona-wrap"
        x-show="!personaMinimized"
+       :class="physState === 'thrown' ? 'is-thrown' : physState === 'dragging' ? 'is-dragging' : ''"
+       :style="`left:${physX}px;top:${physY}px`"
+       @mousedown.prevent="onPersonaMousedown($event)"
        x-transition:leave="transition ease-in duration-150"
        x-transition:leave-start="opacity-100 scale-100"
-       x-transition:leave-end="opacity-0 scale-75"
-       @click="personaMinimized = true"
-       title="클릭하여 숨기기">
+       x-transition:leave-end="opacity-0 scale-75">
     <div class="persona-label" x-text="personaLabel"></div>
-    <div class="persona-svg-wrap" x-html="currentPersonaSvg"></div>
+    <div class="persona-svg-wrap"></div>
   </div>
 
   <button class="persona-minimized-btn"
