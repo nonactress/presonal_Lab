@@ -3,6 +3,11 @@ Nemotron-Personas-Korea → data/nemotron_strata.json 빌드
 실행: python scripts/build_strata.py
 소요: 10~30분 (1회만 실행)
 """
+import os
+os.environ["USE_TORCH"] = "0"
+os.environ["USE_JAX"] = "0"
+os.environ["USE_TF"] = "0"
+
 from datasets import load_dataset
 import json
 from pathlib import Path
