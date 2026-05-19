@@ -207,8 +207,8 @@ def build_scorer_output_v2(
                 "element": e.get("element", ""),
                 "reason": e.get("reason", ""),
                 "severity": 0.6 if e.get("abandoned") else 0.3,
-                "evidence": "",
-                "line_number": None,
+                "evidence": e.get("evidence", ""),
+                "line_number": e.get("line_number"),
             }
             for e in all_events
         ],

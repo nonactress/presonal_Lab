@@ -22,6 +22,30 @@ def _match_strata(strata_data: dict, strata_keys: list[str]) -> list[tuple[str, 
     ]
 
 
+def _enrich_with_line_numbers(results: list, components: list) -> list:
+    def _find(element_name: str) -> tuple:
+        el = element_name.lower()
+        for c in components:
+            label = (c.get("label") or "").lower()
+            if label and (label in el or el in label):
+                return c.get("line_number"), c.get("context", "")
+        el_words = set(el.split())
+        for c in components:
+            label = (c.get("label") or "").lower()
+            if el_words & set(label.split()):
+                return c.get("line_number"), c.get("context", "")
+        return None, ""
+
+    for result in results:
+        for event in result.get("confusion_events", []):
+            if not event.get("line_number"):
+                ln, ctx = _find(event.get("element", ""))
+                event["line_number"] = ln
+                if not event.get("evidence") and ctx:
+                    event["evidence"] = ctx
+    return results
+
+
 async def _simulate_one(
     persona: dict, ui_map: dict, task: str, sem: asyncio.Semaphore
 ) -> dict:
@@ -56,7 +80,8 @@ async def run_pipeline(
             weights.append(weight)
             sim_tasks.append(_simulate_one(persona, ui_map, task, sem))
 
-    results = await asyncio.gather(*sim_tasks)
+    results = list(await asyncio.gather(*sim_tasks))
+    results = _enrich_with_line_numbers(results, ui_map.get("components", []))
 
     return build_scorer_output_v2(
         list(results),
