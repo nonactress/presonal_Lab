@@ -338,7 +338,6 @@ document.addEventListener('alpine:init', () => {
     selectedSex: '',
     selectedEducation: '',
     selectedRegion: '모두',
-    selectedOccupationType: '모두',
     matchedStrata: [],
     totalCount: 0,
     previewPersonas: [],
@@ -447,7 +446,6 @@ document.addEventListener('alpine:init', () => {
       this.selectedSex = '';
       this.selectedEducation = '';
       this.selectedRegion = '모두';
-      this.selectedOccupationType = '모두';
       this.matchedStrata = [];
       this.totalCount = 0;
       this.previewPersonas = [];
@@ -473,7 +471,6 @@ document.addEventListener('alpine:init', () => {
             sex: this.selectedSex,
             education: this.selectedEducation,
             region: this.selectedRegion,
-            occupation_type: this.selectedOccupationType,
           }),
         });
         if (!res.ok) throw new Error('build-cast');
@@ -934,7 +931,6 @@ document.addEventListener('alpine:init', () => {
       this.selectedSex = '';
       this.selectedEducation = '';
       this.selectedRegion = '모두';
-      this.selectedOccupationType = '모두';
       this.matchedStrata = [];
       this.totalCount = 0;
       this.previewPersonas = [];

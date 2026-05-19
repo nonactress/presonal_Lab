@@ -43,7 +43,6 @@ class BuildCastRequest(BaseModel):
     sex: str
     education: str
     region: str = "모두"
-    occupation_type: str = "모두"
 
 
 @app.get("/health")
